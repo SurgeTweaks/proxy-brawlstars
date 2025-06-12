@@ -29,8 +29,13 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-app.use((req, res, next) => {
-    console.log("IP publique Render : ", req.ip);
-    next();
+app.get("/my-ip", async (req, res) => {
+    try {
+      const ip = await axios.get("https://api64.ipify.org?format=json");
+      res.json({ ip: ip.data.ip });
+    } catch (err) {
+      res.status(500).json({ error: "Impossible de récupérer l'IP." });
+    }
   });
+  
   
