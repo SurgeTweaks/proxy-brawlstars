@@ -28,3 +28,9 @@ app.get("/api/player/:uid/:tag", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+app.use((req, res, next) => {
+    console.log("IP publique Render : ", req.ip);
+    next();
+  });
+  
