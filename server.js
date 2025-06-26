@@ -15,7 +15,7 @@ const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
-// === Brawl Stars
+// === BRAWL STARS
 app.get("/api/player/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
@@ -29,7 +29,7 @@ app.get("/api/player/:uid/:tag", async (req, res) => {
   }
 });
 
-// === Clash Royale
+// === CLASH ROYALE
 app.get("/api/clash/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
@@ -43,7 +43,7 @@ app.get("/api/clash/:uid/:tag", async (req, res) => {
   }
 });
 
-// === Clash of Clans
+// === CLASH OF CLANS
 app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
@@ -57,12 +57,12 @@ app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
   }
 });
 
-// === League of Legends
+// === LEAGUE OF LEGENDS
 app.get("/api/lol/:uid/:summonerName", async (req, res) => {
   const { uid, summonerName } = req.params;
   try {
     const { data } = await axios.get(
-      `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}`,
+      `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
       {
         headers: { "X-Riot-Token": RIOT_API_KEY }
       }
@@ -73,18 +73,18 @@ app.get("/api/lol/:uid/:summonerName", async (req, res) => {
   }
 });
 
-// === Valorant
+// === VALORANT
 app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   const { uid, riotId } = req.params;
-  const [gameName, tagLine] = riotId.split("#");
+  const [gameName, tagLine] = decodeURIComponent(riotId).split("#");
 
   if (!gameName || !tagLine) {
-    return res.status(400).json({ error: "Invalid Riot ID format" });
+    return res.status(400).json({ error: "Invalid Riot ID format (expected format: name#tag)" });
   }
 
   try {
     const { data } = await axios.get(
-      `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`,
+      `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
       {
         headers: { "X-Riot-Token": RIOT_API_KEY }
       }
@@ -95,7 +95,7 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   }
 });
 
-// === Test IP
+// === TEST IP
 app.get("/my-ip", async (req, res) => {
   try {
     const ip = await axios.get("https://api64.ipify.org?format=json");
