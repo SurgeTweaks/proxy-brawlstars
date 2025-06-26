@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors()); // 🔥 Active CORS pour toutes les routes
+app.use(cors());
 app.use(express.json());
 
 const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
@@ -19,7 +19,6 @@ const RIOT_API_KEY = process.env.RIOT_API_KEY;
 app.get("/api/player/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
-
   try {
     const { data } = await axios.get(`https://api.brawlstars.com/v1/players/%23${tag}`, {
       headers: { Authorization: `Bearer ${BRAWL_API_KEY}` },
@@ -34,7 +33,6 @@ app.get("/api/player/:uid/:tag", async (req, res) => {
 app.get("/api/clash/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
-
   try {
     const { data } = await axios.get(`https://api.clashroyale.com/v1/players/%23${tag}`, {
       headers: { Authorization: `Bearer ${CLASH_API_KEY}` },
@@ -49,7 +47,6 @@ app.get("/api/clash/:uid/:tag", async (req, res) => {
 app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
   const tag = req.params.tag.replace("#", "").toUpperCase();
   const uid = req.params.uid;
-
   try {
     const { data } = await axios.get(`https://api.clashofclans.com/v1/players/%23${tag}`, {
       headers: { Authorization: `Bearer ${COC_API_KEY}` },
@@ -76,7 +73,7 @@ app.get("/api/lol/:uid/:summonerName", async (req, res) => {
   }
 });
 
-// === Valorant (via Riot ID)
+// === Valorant
 app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   const { uid, riotId } = req.params;
   const [gameName, tagLine] = riotId.split("#");
@@ -108,7 +105,6 @@ app.get("/my-ip", async (req, res) => {
   }
 });
 
-// === Start
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`✅ Serveur actif sur le port ${PORT}`);
 });
