@@ -14,6 +14,8 @@ const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
+console.log("Clé API Riot chargée :", RIOT_API_KEY ? "✅ OUI" : "❌ NON");
+
 // Middleware de gestion d'erreurs
 const handleApiError = (error, game) => {
   console.error(`❌ Erreur API ${game}:`, error.message);
