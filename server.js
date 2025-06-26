@@ -216,8 +216,10 @@ app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
 
     const { data } = await axios.get(apiUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Accept': 'application/json'
+        "X-Riot-Token": RIOT_API_KEY,
+        "User-Agent": "ForgeBlast/1.0",
+        "Origin": "https://developer.riotgames.com",
+        "Accept-Language": "en-US,en;q=0.9"
       },
       timeout: 15000
     });
@@ -291,8 +293,10 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
 
     const { data } = await axios.get(henrikUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Accept': 'application/json'
+        "X-Riot-Token": RIOT_API_KEY,
+        "User-Agent": "ForgeBlast/1.0",
+        "Origin": "https://developer.riotgames.com",
+        "Accept-Language": "en-US,en;q=0.9"
       },
       timeout: 10000
     });
