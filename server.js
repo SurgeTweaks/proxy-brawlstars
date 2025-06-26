@@ -1,17 +1,19 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const admin = require('firebase-admin');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(cors()); // 🔥 Active CORS pour toutes les routes
+app.use(express.json());
 
 const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
 const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
-
-app.use(cors());
 
 // === Brawl Stars
 app.get("/api/player/:uid/:tag", async (req, res) => {
