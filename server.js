@@ -13,6 +13,12 @@ const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
 const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
+const HENRIK_API_KEY = process.env.HENRIK_API_KEY;
+if (!HENRIK_API_KEY) {
+  console.error("❌ Clé HENRIK_API_KEY manquante !");
+  process.exit(1);
+}
+
 
 console.log("Clé API Riot chargée :", RIOT_API_KEY ? "✅ OUI" : "❌ NON");
 
@@ -120,7 +126,13 @@ app.get("/api/lol/:uid/:summonerName", async (req, res) => {
     const { data } = await axios.get(
       `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
       {
-        headers: { "X-Riot-Token": RIOT_API_KEY },
+        headers: {
+          "X-Riot-Token": RIOT_API_KEY,
+          "User-Agent": "ForgeBlast/1.0",
+          "Origin": "https://developer.riotgames.com",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Accept": "application/json"
+        },
         timeout: 10000
       }
     );
@@ -148,7 +160,13 @@ app.get("/api/lol/rank/:uid/:summonerName", async (req, res) => {
     const summonerRes = await axios.get(
       `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
       {
-        headers: { "X-Riot-Token": RIOT_API_KEY },
+        headers: {
+          "X-Riot-Token": RIOT_API_KEY,
+          "User-Agent": "ForgeBlast/1.0",
+          "Origin": "https://developer.riotgames.com",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Accept": "application/json"
+        },
         timeout: 10000
       }
     );
@@ -159,7 +177,13 @@ app.get("/api/lol/rank/:uid/:summonerName", async (req, res) => {
     const rankRes = await axios.get(
       `https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`,
       {
-        headers: { "X-Riot-Token": RIOT_API_KEY },
+        headers: {
+          "X-Riot-Token": RIOT_API_KEY,
+          "User-Agent": "ForgeBlast/1.0",
+          "Origin": "https://developer.riotgames.com",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Accept": "application/json"
+        },
         timeout: 10000
       }
     );
@@ -216,10 +240,12 @@ app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
 
     const { data } = await axios.get(apiUrl, {
       headers: {
+        "Authorization": `Bearer ${HENRIK_API_KEY}`,
         "X-Riot-Token": RIOT_API_KEY,
         "User-Agent": "ForgeBlast/1.0",
         "Origin": "https://developer.riotgames.com",
-        "Accept-Language": "en-US,en;q=0.9"
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "application/json"
       },
       timeout: 15000
     });
@@ -293,10 +319,12 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
 
     const { data } = await axios.get(henrikUrl, {
       headers: {
+        "Authorization": `Bearer ${HENRIK_API_KEY}`,
         "X-Riot-Token": RIOT_API_KEY,
         "User-Agent": "ForgeBlast/1.0",
         "Origin": "https://developer.riotgames.com",
-        "Accept-Language": "en-US,en;q=0.9"
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "application/json"
       },
       timeout: 10000
     });
@@ -329,7 +357,14 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
         const { data: riotData } = await axios.get(
           `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
           {
-            headers: { "X-Riot-Token": RIOT_API_KEY },
+            headers: {
+              "Authorization": `Bearer ${HENRIK_API_KEY}`,
+              "X-Riot-Token": RIOT_API_KEY,
+              "User-Agent": "ForgeBlast/1.0",
+              "Origin": "https://developer.riotgames.com",
+              "Accept-Language": "en-US,en;q=0.9",
+              "Accept": "application/json"
+            },
             timeout: 10000
           }
         );
