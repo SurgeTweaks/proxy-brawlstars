@@ -95,6 +95,28 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   }
 });
 
+// === Valorant Competitive Rank (via puuid, API non officielle)
+app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
+  const { uid, puuid } = req.params;
+
+  try {
+    const { data } = await axios.get(
+      `https://api.henrikdev.xyz/valorant/v1/by-puuid/mmr/eu/${encodeURIComponent(puuid)}`
+    );
+
+    const result = {
+      rank: data.data.currenttierpatched,
+      elo: data.data.elo,
+      ranking_in_tier: data.data.ranking_in_tier
+    };
+
+    res.json({ uid, data: result });
+  } catch (error) {
+    console.error("❌ Valorant rank API error:", error.message);
+    res.status(error.response?.status || 500).json({ error: error.message });
+  }
+});
+
 // === TEST IP
 app.get("/my-ip", async (req, res) => {
   try {
