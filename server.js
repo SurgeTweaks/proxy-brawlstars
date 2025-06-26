@@ -135,6 +135,72 @@ app.get("/api/lol/:uid/:summonerName", async (req, res) => {
   }
 });
 
+// === League of Legends Rank - API officielle Riot
+app.get("/api/lol/rank/:uid/:summonerName", async (req, res) => {
+  const { uid, summonerName } = req.params;
+
+  try {
+    console.log(`📊 LoL Rank - UID: ${uid}, Summoner: ${summonerName}`);
+
+    // Étape 1: récupérer le summonerId
+    const summonerRes = await axios.get(
+      `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
+      {
+        headers: { "X-Riot-Token": RIOT_API_KEY },
+        timeout: 10000
+      }
+    );
+
+    const summonerId = summonerRes.data.id;
+
+    // Étape 2: récupérer les entrées classées
+    const rankRes = await axios.get(
+      `https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`,
+      {
+        headers: { "X-Riot-Token": RIOT_API_KEY },
+        timeout: 10000
+      }
+    );
+
+    const soloQueue = rankRes.data.find(entry => entry.queueType === "RANKED_SOLO_5x5");
+
+    if (!soloQueue) {
+      return res.json({
+        uid,
+        data: {
+          tier: "Non classé",
+          division: "",
+          lp: 0,
+          wins: 0,
+          losses: 0
+        },
+        success: true
+      });
+    }
+
+    res.json({
+      uid,
+      data: {
+        tier: soloQueue.tier,
+        division: soloQueue.rank,
+        lp: soloQueue.leaguePoints,
+        wins: soloQueue.wins,
+        losses: soloQueue.losses
+      },
+      success: true
+    });
+
+  } catch (error) {
+    const errorInfo = handleApiError(error, 'League of Legends Rank');
+    res.status(errorInfo.status).json({
+      uid,
+      error: errorInfo.message,
+      details: errorInfo.details,
+      success: false
+    });
+  }
+});
+
 // === Valorant Competitive Rank - VERSION CORRIGÉE
 app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
   const { uid, puuid } = req.params;
