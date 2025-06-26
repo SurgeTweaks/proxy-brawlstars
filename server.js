@@ -135,7 +135,73 @@ app.get("/api/lol/:uid/:summonerName", async (req, res) => {
   }
 });
 
-// === VALORANT
+// === Valorant Competitive Rank - VERSION CORRIGÉE
+app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
+  const { uid, puuid } = req.params;
+
+  try {
+    console.log(`🏆 Valorant Rank - UID: ${uid}, PUUID: ${puuid}`);
+
+    // NOUVELLE URL CORRIGÉE pour l'API Henrik Dev
+    const apiUrl = `https://api.henrikdev.xyz/valorant/v1/by-puuid/mmr/eu/${encodeURIComponent(puuid)}`;
+    console.log(`🔗 URL API: ${apiUrl}`);
+    
+    const { data } = await axios.get(apiUrl, {
+      headers: {
+        'User-Agent': 'YourApp/1.0',
+        'Accept': 'application/json'
+      },
+      timeout: 15000
+    });
+
+    // Vérification si l'API retourne des données valides
+    if (!data || data.status !== 200) {
+      throw new Error(`API Henrik Dev retourne: ${data?.status || 'Erreur inconnue'}`);
+    }
+
+    const result = {
+      rank: data.data?.currenttierpatched || "Non classé",
+      elo: data.data?.elo || 0,
+      ranking_in_tier: data.data?.ranking_in_tier || 0,
+      mmr_change: data.data?.mmr_change_to_last_game || 0,
+      games_needed_for_rating: data.data?.games_needed_for_rating || 0
+    };
+
+    console.log(`✅ Rang récupéré: ${result.rank} (${result.elo} ELO)`);
+    res.json({ uid, data: result, success: true });
+
+  } catch (error) {
+    console.error("❌ Valorant rank API error:", error.message);
+    
+    // Gestion d'erreur plus précise
+    if (error.response) {
+      console.error(`Status: ${error.response.status}, Data:`, error.response.data);
+      
+      // Si c'est une erreur 404, le joueur n'est pas classé
+      if (error.response.status === 404) {
+        return res.json({ 
+          uid, 
+          data: { 
+            rank: "Non classé", 
+            elo: 0, 
+            ranking_in_tier: 0 
+          }, 
+          success: true 
+        });
+      }
+    }
+    
+    const errorInfo = handleApiError(error, 'Valorant Rank');
+    res.status(errorInfo.status).json({ 
+      uid, 
+      error: errorInfo.message, 
+      details: errorInfo.details,
+      success: false 
+    });
+  }
+});
+
+// === Route Valorant Account - AUSSI CORRIGÉE
 app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   const { uid, riotId } = req.params;
   const decodedRiotId = decodeURIComponent(riotId);
@@ -150,50 +216,60 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
   }
 
   try {
-    console.log(`🎯 Valorant - UID: ${uid}, RiotID: ${decodedRiotId}`);
+    console.log(`🎯 Valorant Account - UID: ${uid}, RiotID: ${decodedRiotId}`);
     
-    const { data } = await axios.get(
-      `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-      {
-        headers: { "X-Riot-Token": RIOT_API_KEY },
-        timeout: 10000
-      }
-    );
+    // CHOIX 1: Utiliser l'API Henrik Dev (GRATUITE et plus fiable)
+    const henrikUrl = `https://api.henrikdev.xyz/valorant/v1/account/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
     
-    res.json({ uid, data, success: true });
-  } catch (error) {
-    const errorInfo = handleApiError(error, 'Valorant');
-    res.status(errorInfo.status).json({ 
-      uid, 
-      error: errorInfo.message, 
-      details: errorInfo.details,
-      success: false 
+    const { data } = await axios.get(henrikUrl, {
+      headers: {
+        'User-Agent': 'YourApp/1.0',
+        'Accept': 'application/json'
+      },
+      timeout: 10000
     });
-  }
-});
 
-// === Valorant Competitive Rank
-app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
-  const { uid, puuid } = req.params;
+    // Vérification de la réponse
+    if (!data || data.status !== 200) {
+      throw new Error(`API Henrik Dev retourne: ${data?.status || 'Erreur inconnue'}`);
+    }
 
-  try {
-    console.log(`🏆 Valorant Rank - UID: ${uid}, PUUID: ${puuid}`);
-    
-    const { data } = await axios.get(
-      `https://api.henrikdev.xyz/valorant/v1/by-puuid/mmr/eu/${encodeURIComponent(puuid)}`,
-      { timeout: 15000 }
-    );
-
-    const result = {
-      rank: data.data?.currenttierpatched || "Non classé",
-      elo: data.data?.elo || 0,
-      ranking_in_tier: data.data?.ranking_in_tier || 0
+    // Formatage des données pour correspondre à votre format
+    const accountData = {
+      puuid: data.data?.puuid,
+      gameName: data.data?.name,
+      tagLine: data.data?.tag,
+      account_level: data.data?.account_level || 0,
+      region: data.data?.region || 'eu'
     };
 
-    res.json({ uid, data: result, success: true });
+    console.log(`✅ Compte Valorant trouvé: ${accountData.gameName}#${accountData.tagLine}`);
+    res.json({ uid, data: accountData, success: true });
+
   } catch (error) {
-    console.error("❌ Valorant rank API error:", error.message);
-    const errorInfo = handleApiError(error, 'Valorant Rank');
+    console.error("❌ Valorant account error:", error.message);
+    
+    // Fallback vers l'API Riot officielle si Henrik Dev échoue
+    if (RIOT_API_KEY) {
+      try {
+        console.log("🔄 Tentative avec l'API Riot officielle...");
+        
+        const { data: riotData } = await axios.get(
+          `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
+          {
+            headers: { "X-Riot-Token": RIOT_API_KEY },
+            timeout: 10000
+          }
+        );
+        
+        res.json({ uid, data: riotData, success: true });
+        return;
+      } catch (riotError) {
+        console.error("❌ API Riot aussi échoue:", riotError.message);
+      }
+    }
+    
+    const errorInfo = handleApiError(error, 'Valorant Account');
     res.status(errorInfo.status).json({ 
       uid, 
       error: errorInfo.message, 
