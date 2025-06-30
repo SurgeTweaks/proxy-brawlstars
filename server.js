@@ -12,15 +12,7 @@ app.use(express.json());
 const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
 const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
-const RIOT_API_KEY = process.env.RIOT_API_KEY;
-const HENRIK_API_KEY = process.env.HENRIK_API_KEY;
-if (!HENRIK_API_KEY) {
-  console.error("❌ Clé HENRIK_API_KEY manquante !");
-  process.exit(1);
-}
-
-
-console.log("Clé API Riot chargée :", RIOT_API_KEY ? "✅ OUI" : "❌ NON");
+const FORTNITE_API_KEY = process.env.FORTNITE_API_KEY;
 
 // Middleware de gestion d'erreurs
 const handleApiError = (error, game) => {
@@ -120,8 +112,6 @@ app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
 // === FORTNITE - Rank compétitif via fortniteapi.io
 app.get("/api/fortnite/:uid/:username", async (req, res) => {
   const { uid, username } = req.params;
-  const FORTNITE_API_KEY = "ec08b2d3-2e62e3c7-77c4fb64-ba92ae56";
-
   try {
     console.log(`🎮 Fortnite - UID: ${uid}, Pseudo: ${username}`);
 
