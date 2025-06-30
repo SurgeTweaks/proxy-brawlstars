@@ -116,267 +116,47 @@ app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
   }
 });
 
-// === LEAGUE OF LEGENDS
-app.get("/api/lol/:uid/:summonerName", async (req, res) => {
-  const { uid, summonerName } = req.params;
+
+// === FORTNITE - Rank compétitif via fortniteapi.io
+app.get("/api/fortnite/:uid/:username", async (req, res) => {
+  const { uid, username } = req.params;
+  const FORTNITE_API_KEY = "ec08b2d3-2e62e3c7-77c4fb64-ba92ae56";
 
   try {
-    console.log(`🧠 League of Legends - UID: ${uid}, Summoner: ${summonerName}`);
+    console.log(`🎮 Fortnite - UID: ${uid}, Pseudo: ${username}`);
 
-    const { data } = await axios.get(
-      `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
-      {
-        headers: {
-          "X-Riot-Token": RIOT_API_KEY,
-          "User-Agent": "ForgeBlast/1.0",
-          "Origin": "https://developer.riotgames.com",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Accept": "application/json"
-        },
-        timeout: 10000
-      }
-    );
-
-    res.json({ uid, data, success: true });
-  } catch (error) {
-    const errorInfo = handleApiError(error, 'League of Legends');
-    res.status(errorInfo.status).json({
-      uid,
-      error: errorInfo.message,
-      details: errorInfo.details,
-      success: false
-    });
-  }
-});
-
-// === League of Legends Rank - API officielle Riot
-app.get("/api/lol/rank/:uid/:summonerName", async (req, res) => {
-  const { uid, summonerName } = req.params;
-
-  try {
-    console.log(`📊 LoL Rank - UID: ${uid}, Summoner: ${summonerName}`);
-
-    // Étape 1: récupérer le summonerId
-    const summonerRes = await axios.get(
-      `https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(summonerName)}`,
-      {
-        headers: {
-          "X-Riot-Token": RIOT_API_KEY,
-          "User-Agent": "ForgeBlast/1.0",
-          "Origin": "https://developer.riotgames.com",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Accept": "application/json"
-        },
-        timeout: 10000
-      }
-    );
-
-    const summonerId = summonerRes.data.id;
-
-    // Étape 2: récupérer les entrées classées
-    const rankRes = await axios.get(
-      `https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`,
-      {
-        headers: {
-          "X-Riot-Token": RIOT_API_KEY,
-          "User-Agent": "ForgeBlast/1.0",
-          "Origin": "https://developer.riotgames.com",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Accept": "application/json"
-        },
-        timeout: 10000
-      }
-    );
-
-    const soloQueue = rankRes.data.find(entry => entry.queueType === "RANKED_SOLO_5x5");
-
-    if (!soloQueue) {
-      return res.json({
-        uid,
-        data: {
-          tier: "Non classé",
-          division: "",
-          lp: 0,
-          wins: 0,
-          losses: 0
-        },
-        success: true
-      });
-    }
-
-    res.json({
-      uid,
-      data: {
-        tier: soloQueue.tier,
-        division: soloQueue.rank,
-        lp: soloQueue.leaguePoints,
-        wins: soloQueue.wins,
-        losses: soloQueue.losses
-      },
-      success: true
-    });
-
-  } catch (error) {
-    const errorInfo = handleApiError(error, 'League of Legends Rank');
-    res.status(errorInfo.status).json({
-      uid,
-      error: errorInfo.message,
-      details: errorInfo.details,
-      success: false
-    });
-  }
-});
-
-// === Valorant Competitive Rank - VERSION CORRIGÉE
-app.get("/api/valorant/rank/:uid/:puuid", async (req, res) => {
-  const { uid, puuid } = req.params;
-
-  try {
-    console.log(`🏆 Valorant Rank - UID: ${uid}, PUUID: ${puuid}`);
-
-    // NOUVELLE URL CORRIGÉE pour l'API Henrik Dev
-    const apiUrl = `https://api.henrikdev.xyz/valorant/v1/by-puuid/mmr/eu/${encodeURIComponent(puuid)}`;
-    console.log(`🔗 URL API: ${apiUrl}`);
-
-    const { data } = await axios.get(apiUrl, {
-      headers: {
-        "Authorization": `Bearer ${HENRIK_API_KEY}`,
-        "X-Riot-Token": RIOT_API_KEY,
-        "User-Agent": "ForgeBlast/1.0",
-        "Origin": "https://developer.riotgames.com",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept": "application/json"
-      },
-      timeout: 15000
-    });
-
-    // Vérification si l'API retourne des données valides
-    if (!data || data.status !== 200) {
-      throw new Error(`API Henrik Dev retourne: ${data?.status || 'Erreur inconnue'}`);
-    }
-
-    const result = {
-      rank: data.data?.currenttierpatched || "Non classé",
-      elo: data.data?.elo || 0,
-      ranking_in_tier: data.data?.ranking_in_tier || 0,
-      mmr_change: data.data?.mmr_change_to_last_game || 0,
-      games_needed_for_rating: data.data?.games_needed_for_rating || 0
-    };
-
-    console.log(`✅ Rang récupéré: ${result.rank} (${result.elo} ELO)`);
-    res.json({ uid, data: result, success: true });
-
-  } catch (error) {
-    console.error("❌ Valorant rank API error:", error.message);
-
-    // Gestion d'erreur plus précise
-    if (error.response) {
-      console.error(`Status: ${error.response.status}, Data:`, error.response.data);
-
-      // Si c'est une erreur 404, le joueur n'est pas classé
-      if (error.response.status === 404) {
-        return res.json({
-          uid,
-          data: {
-            rank: "Non classé",
-            elo: 0,
-            ranking_in_tier: 0
-          },
-          success: true
-        });
-      }
-    }
-
-    const errorInfo = handleApiError(error, 'Valorant Rank');
-    res.status(errorInfo.status).json({
-      uid,
-      error: errorInfo.message,
-      details: errorInfo.details,
-      success: false
-    });
-  }
-});
-
-// === Route Valorant Account - AUSSI CORRIGÉE
-app.get("/api/valorant/:uid/:riotId", async (req, res) => {
-  const { uid, riotId } = req.params;
-  const decodedRiotId = decodeURIComponent(riotId);
-  const [gameName, tagLine] = decodedRiotId.split("#");
-
-  if (!gameName || !tagLine) {
-    return res.status(400).json({
-      uid,
-      error: "Format Riot ID invalide (attendu: nom#tag)",
-      success: false
-    });
-  }
-
-  try {
-    console.log(`🎯 Valorant Account - UID: ${uid}, RiotID: ${decodedRiotId}`);
-
-    // CHOIX 1: Utiliser l'API Henrik Dev (GRATUITE et plus fiable)
-    const henrikUrl = `https://api.henrikdev.xyz/valorant/v1/account/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-
-    const { data } = await axios.get(henrikUrl, {
-      headers: {
-        "Authorization": `Bearer ${HENRIK_API_KEY}`,
-        "X-Riot-Token": RIOT_API_KEY,
-        "User-Agent": "ForgeBlast/1.0",
-        "Origin": "https://developer.riotgames.com",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept": "application/json"
-      },
+    // Étape 1 : lookup pour obtenir l'account_id
+    const lookupRes = await axios.get("https://fortniteapi.io/v1/lookup", {
+      params: { username },
+      headers: { Authorization: FORTNITE_API_KEY },
       timeout: 10000
     });
 
-    // Vérification de la réponse
-    if (!data || data.status !== 200) {
-      throw new Error(`API Henrik Dev retourne: ${data?.status || 'Erreur inconnue'}`);
+    if (!lookupRes.data || !lookupRes.data.account_id) {
+      return res.status(404).json({ uid, error: "Joueur introuvable", success: false });
     }
 
-    // Formatage des données pour correspondre à votre format
-    const accountData = {
-      puuid: data.data?.puuid,
-      gameName: data.data?.name,
-      tagLine: data.data?.tag,
-      account_level: data.data?.account_level || 0,
-      region: data.data?.region || 'eu'
+    const accountId = lookupRes.data.account_id;
+
+    // Étape 2 : récupération des stats compétitives
+    const statsRes = await axios.get("https://fortniteapi.io/v1/stats", {
+      params: { account: accountId },
+      headers: { Authorization: FORTNITE_API_KEY },
+      timeout: 10000
+    });
+
+    const stats = statsRes.data.global_stats || {};
+    const result = {
+      rank_name: stats.rank_name || "Non classé",
+      rank: stats.rank || 0,
+      win_rate: stats.win_rate || 0,
+      matches: stats.matchesplayed || 0
     };
 
-    console.log(`✅ Compte Valorant trouvé: ${accountData.gameName}#${accountData.tagLine}`);
-    res.json({ uid, data: accountData, success: true });
+    res.json({ uid, data: result, success: true });
 
   } catch (error) {
-    console.error("❌ Valorant account error:", error.message);
-
-    // Fallback vers l'API Riot officielle si Henrik Dev échoue
-    if (RIOT_API_KEY) {
-      try {
-        console.log("🔄 Tentative avec l'API Riot officielle...");
-
-        const { data: riotData } = await axios.get(
-          `https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
-          {
-            headers: {
-              "Authorization": `Bearer ${HENRIK_API_KEY}`,
-              "X-Riot-Token": RIOT_API_KEY,
-              "User-Agent": "ForgeBlast/1.0",
-              "Origin": "https://developer.riotgames.com",
-              "Accept-Language": "en-US,en;q=0.9",
-              "Accept": "application/json"
-            },
-            timeout: 10000
-          }
-        );
-
-        res.json({ uid, data: riotData, success: true });
-        return;
-      } catch (riotError) {
-        console.error("❌ API Riot aussi échoue:", riotError.message);
-      }
-    }
-
-    const errorInfo = handleApiError(error, 'Valorant Account');
+    const errorInfo = handleApiError(error, 'Fortnite');
     res.status(errorInfo.status).json({
       uid,
       error: errorInfo.message,
@@ -385,6 +165,7 @@ app.get("/api/valorant/:uid/:riotId", async (req, res) => {
     });
   }
 });
+
 
 // === Health Check
 app.get("/health", (req, res) => {
