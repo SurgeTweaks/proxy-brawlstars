@@ -135,13 +135,16 @@ app.get("/api/fortnite/:uid/:username", async (req, res) => {
       timeout: 10000
     });
 
-    const stats = statsRes.data.global_stats || {};
+    const current = statsRes.data?.battle_royale?.ranked?.current || {};
+    const best = statsRes.data?.battle_royale?.ranked?.all_time_best || {};
+
     const result = {
-      rank_name: stats.rank_name || "Non classé",
-      rank: stats.rank || 0,
-      win_rate: stats.win_rate || 0,
-      matches: stats.matchesplayed || 0
+      current_rank_name: current.rank_name || "Non classé",
+      current_percent: current.percent || 0,
+      best_rank_name: best.rank_name || null,
+      best_rank_code: best.code || null
     };
+
 
     res.json({ uid, data: result, success: true });
 
