@@ -12,7 +12,6 @@ app.use(express.json());
 const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
 const CLASH_API_KEY = process.env.CLASH_API_KEY;
 const COC_API_KEY = process.env.COC_API_KEY;
-const TRN_API_KEY = process.env.TRN_API_KEY;
 
 // Middleware de gestion d'erreurs
 const handleApiError = (error, game) => {
@@ -107,54 +106,6 @@ app.get("/api/clashofclans/:uid/:tag", async (req, res) => {
     });
   }
 });
-
-// === APEX LEGENDS - Stats via Tracker.gg
-app.get("/api/apex/:uid/:platform/:username", async (req, res) => {
-  const { uid, platform, username } = req.params;
-
-  try {
-    console.log(`🎯 Apex Legends - UID: ${uid}, Platform: ${platform}, Username: ${username}`);
-
-    const apiUrl = `https://public-api.tracker.gg/v2/apex/standard/profile/${platform}/${encodeURIComponent(username)}`;
-
-    const response = await axios.get(apiUrl, {
-      headers: {
-        "TRN-Api-Key": TRN_API_KEY
-      },
-      timeout: 10000
-    });
-
-    const data = response.data?.data;
-
-    if (!data) {
-      return res.status(404).json({
-        uid,
-        error: "Aucune donnée trouvée pour ce joueur",
-        success: false
-      });
-    }
-
-    const brRank = data.segments.find(s => s.metadata?.name === "Battle Royale")?.stats?.rankScore || {};
-
-    const result = {
-      rankName: brRank.metadata?.rankName || "Inconnu",
-      rankScore: brRank.value || 0,
-      rankIcon: brRank.metadata?.iconUrl || null
-    };
-
-    res.json({ uid, data: result, success: true });
-
-  } catch (error) {
-    const errorInfo = handleApiError(error, 'Apex Legends');
-    res.status(errorInfo.status).json({
-      uid,
-      error: errorInfo.message,
-      details: errorInfo.details,
-      success: false
-    });
-  }
-});
-
 
 // === Health Check
 app.get("/health", (req, res) => {
