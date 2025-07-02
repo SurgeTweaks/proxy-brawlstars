@@ -1,28 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const rateLimit = require('express-rate-limit');
-const NodeCache = require('node-cache');
-const morgan = require('morgan');
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(cors());
-app.use(express.json());
-app.use(morgan('combined'));
-
-// === Rate Limiting
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 20,
-  message: { error: "Trop de requêtes. Réessaye plus tard.", success: false }
-});
-app.use(limiter);
-
-// === Cache local (TTL = 60 sec)
-const cache = new NodeCache({ stdTTL: 60 });
 
 // === API Keys
 const BRAWL_API_KEY = process.env.BRAWL_API_KEY;
